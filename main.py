@@ -3,13 +3,22 @@ import re
 import atexit
 import time
 import pickle  # come on, that's so funny
+import asyncio
+import discord
+from discord.ext import tasks
 import Secret
 
 secret = Secret()
 
+
 user = secret.username
 passwd = secret.password
 imap_url = "imap.gmail.com"
+
+TOKEN = secret.discordAuth
+GUILD = secret.discordGuild
+client = discord.Client(intents=discord.Intents.default())
+channel = None
 
 parsed = []
 
@@ -32,7 +41,7 @@ def search(key, value, connection):
     return data
 
 
-def getEmails(messageBytes):
+def getEmails(messageBytes, con):
     msgs = []
     for num in messageBytes[0].split():
         typ, data = con.fetch(num, '(RFC822)')
@@ -85,6 +94,8 @@ def parseMail(message):
     date = str()
     teacher = str()
     full = str()
+    channel = client.get_channel(1047219829255446689)
+
 
     try:
         body = extractBody(message)
@@ -97,12 +108,12 @@ def parseMail(message):
 
         # If the array is empty
         if not parsed:
-            print(full)
+            asyncio.create_task(channel.send(full))
             parsed.append(full)
         else:
             # Check if the message string is in the parsed array
             if full not in parsed:
-                print(full)
+                asyncio.create_task(channel.send(full))
                 parsed.append(full)
 
     except AttributeError:
@@ -118,13 +129,21 @@ if __name__ == "__main__":
         except EOFError:
             pass
 
-    while True:
+
+    @client.event
+    async def on_ready():
+        print(f'{client.user} has connected to Discord!')
+        fetchEmails.start()
+
+
+    @tasks.loop(seconds=15)
+    async def fetchEmails():
         con = imaplib.IMAP4_SSL(imap_url)
         con.login(user, passwd)
         con.select("Inbox")
 
         # Search for every email with "New Message" in the subject.
-        messages = getEmails(search('SUBJECT', 'New Message', con))
+        messages = getEmails(search('SUBJECT', 'New Message', con), con)
 
         for msg in messages[::-1]:
             for sent in msg:
@@ -148,4 +167,5 @@ if __name__ == "__main__":
                         pass
 
         print('pass completed')
-        time.sleep(15)
+
+    client.run(TOKEN)
