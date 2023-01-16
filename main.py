@@ -86,23 +86,27 @@ def parseMail(message):
     teacher = str()
     full = str()
 
-    body = extractBody(message)
-    date = extractTime(message)
-    teacher = extractClass(message)
+    try:
+        body = extractBody(message)
+        date = extractTime(message)
+        teacher = extractClass(message)
 
-    full = teacher + "\n" + date + "\n" + body + "\n"
+        full = teacher + "\n" + date + "\n" + body + "\n"
 
-    # If the message hasn't already been read, read & store it.
+        # If the message hasn't already been read, read & store it.
 
-    # If the array is empty
-    if not parsed:
-        print(full)
-        parsed.append(full)
-    else:
-        # Check if the message string is in the parsed array
-        if full not in parsed:
+        # If the array is empty
+        if not parsed:
             print(full)
             parsed.append(full)
+        else:
+            # Check if the message string is in the parsed array
+            if full not in parsed:
+                print(full)
+                parsed.append(full)
+
+    except AttributeError:
+        pass
 
 
 if __name__ == "__main__":
@@ -114,11 +118,11 @@ if __name__ == "__main__":
         except EOFError:
             pass
 
-    con = imaplib.IMAP4_SSL(imap_url)
-    con.login(user, passwd)
-    con.select("Inbox")
-
     while True:
+        con = imaplib.IMAP4_SSL(imap_url)
+        con.login(user, passwd)
+        con.select("Inbox")
+
         # Search for every email with "New Message" in the subject.
         messages = getEmails(search('SUBJECT', 'New Message', con))
 
@@ -142,7 +146,6 @@ if __name__ == "__main__":
 
                     except UnicodeEncodeError as e:
                         pass
+
+        print('pass completed')
         time.sleep(15)
-"""
-    I'll BRB (again)
-"""
