@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 # The file which reassigns my environment variables
-env.py
+Secret.py
