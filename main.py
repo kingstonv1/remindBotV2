@@ -1,7 +1,6 @@
 import imaplib
 import re
 import atexit
-import time
 import pickle  # come on, that's so funny
 import asyncio
 import discord
@@ -104,16 +103,18 @@ def parseMail(message):
 
         full = teacher + "\n" + date + "\n" + body + "\n"
 
+        msg = discord.Embed(type="rich", title=teacher, description=body, color=discord.Color.blue()).set_footer(text=date)
+
         # If the message hasn't already been read, read & store it.
 
         # If the array is empty
         if not parsed:
-            asyncio.create_task(channel.send(full))
+            asyncio.create_task(channel.send(embed=msg))
             parsed.append(full)
         else:
             # Check if the message string is in the parsed array
             if full not in parsed:
-                asyncio.create_task(channel.send(full))
+                asyncio.create_task(channel.send(embed=msg))
                 parsed.append(full)
 
     except AttributeError:
